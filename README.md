@@ -1,6 +1,6 @@
 # Sudoku
 This is a graphical user interface for Sudoku Puzzle solver. 
-This program is designed in Python, using C-Library Simple DirectMedia Layer 2 (SDL2) as rendering system.
+This program is designed in Python, using Python Wrapper for Simple DirectMedia Layer 2 (PySDL2, https://pysdl2.readthedocs.io/en/rel_0_9_4/) as rendering system.
 
 ## Files:
 ###SudokuGUI.py
