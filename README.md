@@ -20,9 +20,9 @@ The mathematical and logical flow of how a Sudoku can be solved. The testing Sud
 The key approach for solving Sudoku is based on Brute Force Searching and Elimination Searching. 
 Combination of these two methods can solve every puzzle (that have been tested by me) from Easy to Hard.
 
-+ Easy and Medium can be solved with only Brute Force Searching within 5 milliseconds.
-+ Hard Puzzles can be solved with iteration of Brute Force and Elimination Searching within 15 milliseconds.
-+ Evil Puzzles are puzzles must be search with intuitive guessing and iterations of try-and-error (Currently not implemented).
++ Easy and Medium can be solved with only Brute Force and Elimination Searching within 15 milliseconds.
++ Some Hard Puzzles can be solved with iteration of Brute Force and Elimination Searching within 15 milliseconds.
++ Majority of Hard and Evil Puzzles are puzzles must be search with intuitive guessing and iterations of try-and-error (Currently not implemented). 
 
 
 ## Installation as Windows Executable:
