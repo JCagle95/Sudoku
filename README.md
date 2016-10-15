@@ -10,7 +10,7 @@ Keyboard Control
 
 1. Type Q to Quit Program.
 2. Click on a Block, and type in the digit using Small Number Keypad.
-3. Highlight a block already with digit, Click R and retype the digit.
+3. Highlight a block already with digit, Click R will reset the block
 4. Click "SolveIt!" to solve the puzzle give. 
 5. Click "Reset" to refresh the Sudoku and solve the next one.
 
@@ -21,8 +21,9 @@ The key approach for solving Sudoku is based on Brute Force Searching and Elimin
 Combination of these two methods can solve every puzzle (that have been tested by me) from Easy to Hard.
 
 + Easy and Medium can be solved with only Brute Force and Elimination Searching within 15 milliseconds.
-+ Some Hard Puzzles can be solved with iteration of Brute Force and Elimination Searching within 15 milliseconds.
-+ Majority of Hard and Evil Puzzles are puzzles must be search with intuitive guessing and iterations of try-and-error (Currently not implemented). 
++ Majority of Hard Puzzles can be solved with iteration of Brute Force and Elimination Searching within 15 milliseconds.
++ Majority of Evil Puzzles are puzzles must be search with intuitive guessing and iterations of try-and-error but is not implemented. The recursive method shall be implemented in the future.
++ *Consumed Time not include rendering time.*
 
 
 ## Installation as Windows Executable:
