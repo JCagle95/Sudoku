@@ -1,12 +1,13 @@
 """
 The Sudoku GUI is a graphical user interface for Sudoku. 
-It will automatically solving the Sudoku for you when you click Solve It!
+It will automatically solving the Sudoku for you when you click "Solve It!"
 
 @author:
 Jackson Cagle
 Brain Mapping Laboratory
 J. Crayton Pruitt Family Department of Biomedical Engineering, 
 University of Florida
+Oct. 15th, 2016
 """
 
 import os
