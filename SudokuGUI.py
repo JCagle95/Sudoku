@@ -162,7 +162,7 @@ class SudokuGUI():
         
     def DigitReset(self):
         self.reset = True
-        self.Sudoku.updateBlocks(self.factory.from_color(GREY, size=(90, 90)), self.Sudoku.input[self.Sudoku.chosen]["Position"][0], self.Sudoku.input[self.Sudoku.chosen]["Position"][1])
+        self.Sudoku.updateBlocks(self.factory.from_color(GREEN, size=(90, 90)), self.Sudoku.input[self.Sudoku.chosen]["Position"][0], self.Sudoku.input[self.Sudoku.chosen]["Position"][1])
         surface = sdl2.sdlttf.TTF_RenderText_Solid(self.font, " ", BLACK)
         self.Sudoku.updateDigits(self.factory.from_surface(surface.contents, True), self.Sudoku.chosen, True, 0)
         self.spriterenderer.render(self.Sudoku.block[self.Sudoku.chosen])
