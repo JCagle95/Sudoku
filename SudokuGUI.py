@@ -98,6 +98,8 @@ class SudokuGUI():
         self.KeyAction[sdl2.SDL_SCANCODE_R] = self.DigitReset
         for scancode in range(89,98):
             self.KeyAction[scancode] = self.KeyEnter
+        for scancode in range(30,39):
+            self.KeyAction[scancode] = self.KeyEnter
             
         self.running = True
         self.reset = False
@@ -152,12 +154,18 @@ class SudokuGUI():
     def RenderBlocks(self):
         self.spriterenderer.render(self.Sudoku.block[self.Sudoku.chosen])
         self.spriterenderer.render(self.Sudoku.digit[self.Sudoku.chosen])
+        # print self.Sudoku.matrix # For Debug
         
     def Quit(self):
         self.running = False
         
     def DigitReset(self):
         self.reset = True
+        self.Sudoku.updateBlocks(self.factory.from_color(GREY, size=(90, 90)), self.Sudoku.input[self.Sudoku.chosen]["Position"][0], self.Sudoku.input[self.Sudoku.chosen]["Position"][1])
+        surface = sdl2.sdlttf.TTF_RenderText_Solid(self.font, " ", BLACK)
+        self.Sudoku.updateDigits(self.factory.from_surface(surface.contents, True), self.Sudoku.chosen, True, 0)
+        self.spriterenderer.render(self.Sudoku.block[self.Sudoku.chosen])
+        self.spriterenderer.render(self.Sudoku.digit[self.Sudoku.chosen])
         
     def KeyEnter(self):
         if self.Sudoku.selected and (self.reset or not self.Sudoku.input[self.Sudoku.chosen]["State"]):
@@ -185,6 +193,7 @@ class SudokuGUI():
         start = time.time()*1000
         solver = SudokuSolver(self.Sudoku.matrix)
         cycles = 0
+        Failed = 0
         while solver.toSolve > 0:
             ForceFound,Solution = solver.BruteForceSearch()
             for i in range(ForceFound):
@@ -203,8 +212,10 @@ class SudokuGUI():
             solver.toSolve -= (ForceFound+EliminationFound)
             cycles += 1
             if ForceFound == 0 and EliminationFound == 0 and solver.toSolve > 0:
-                print "Unable to Complete Puzzle"        
-                break
+                Failed += 1
+                if Failed > 10:
+                    print "Unable to Complete Puzzle"        
+                    break
             
         if solver.toSolve == 0:
             print "Found All"
@@ -231,7 +242,10 @@ def main():
                 Prog.Quit()
                 break
             if event.type == sdl2.SDL_KEYDOWN:
-                Prog.digit = event.key.keysym.scancode - 88
+                if event.key.keysym.scancode < 39:
+                    Prog.digit = event.key.keysym.scancode - 29
+                else:
+                    Prog.digit = event.key.keysym.scancode - 88
                 Prog.KeyAction[event.key.keysym.scancode]()
             elif event.type == sdl2.SDL_MOUSEBUTTONDOWN:
                 Prog.MouseAction(event.button)

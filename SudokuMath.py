@@ -13,7 +13,7 @@ import time
 # Testing Dataset
 matrix = np.zeros((9,9),dtype=np.int8)
 
-""" Medium Level 
+""" Medium Level (Solved)
 matrix[0] = [0,0,4,0,6,9,0,7,5]
 matrix[1] = [7,0,0,0,5,0,0,0,2]
 matrix[2] = [0,3,0,2,0,0,0,0,0]
@@ -25,7 +25,7 @@ matrix[7] = [6,0,0,0,8,0,0,0,3]
 matrix[8] = [5,8,0,4,2,0,7,0,0]
 """
 
-""" Hard  
+""" Hard  (Solved)
 matrix[0] = [8,9,0,3,0,6,2,0,0]
 matrix[1] = [0,0,0,2,0,0,0,0,5]
 matrix[2] = [2,0,0,9,1,0,0,0,0]
@@ -37,7 +37,7 @@ matrix[7] = [3,0,0,0,0,1,0,0,0]
 matrix[8] = [0,0,7,6,0,3,0,5,8]
 """
 
-""" Hard (Somewhat Harder)  """
+""" Hard (Somewhat Harder, Solved)
 matrix[0] = [0,5,0,0,0,0,2,0,9]
 matrix[1] = [9,0,0,0,1,8,5,6,0]
 matrix[2] = [0,0,0,0,0,3,0,4,0]
@@ -47,6 +47,19 @@ matrix[5] = [5,9,0,0,0,0,0,0,0]
 matrix[6] = [0,2,0,6,0,0,0,0,0]
 matrix[7] = [0,4,3,7,5,0,0,0,6]
 matrix[8] = [6,0,5,0,0,0,0,2,0]
+"""
+
+""" Hard (Somewhat Harder)  """
+matrix[0] = [0,0,0,0,0,2,8,0,0]
+matrix[1] = [1,0,0,0,0,3,0,5,6]
+matrix[2] = [0,0,0,0,0,0,0,2,3]
+matrix[3] = [0,4,0,1,6,0,0,9,0]
+matrix[4] = [0,3,0,0,5,0,0,4,0]
+matrix[5] = [0,7,0,0,9,4,0,8,0]
+matrix[6] = [9,2,0,0,0,0,0,0,0]
+matrix[7] = [4,8,0,5,0,0,0,0,1]
+matrix[8] = [0,0,3,4,0,0,0,0,0]
+
 
 class SudokuSolver:
     def __init__(self, matrix, possible=defaultdict(lambda: None), 
@@ -69,6 +82,9 @@ class SudokuSolver:
             
         for y in range(9):
             self.exist_y[y] = Set(self.matrix[self.matrix[:,y]!=0,y])
+            for x in range(9):
+                if self.matrix[x,y] == 0:
+                    self.possible[x*10+y] = dict({"pool":Set(range(1,10)),"index":(x,y)})
             
         for group in range(9):
             x = int(np.floor(group/3))
@@ -98,7 +114,6 @@ class SudokuSolver:
                     if self.matrix[x,y] == 0:
                         
                         # Find all possible solutions in this block
-                        self.possible[pos] = dict({"pool":Set(range(1,10)),"index":(x,y)})
                         self.possible[pos]["pool"].difference_update(self.exist_y[y])
                         self.possible[pos]["pool"].difference_update(self.exist_x[x])
                         self.possible[pos]["pool"].difference_update(self.exist_group[group])
@@ -143,19 +158,19 @@ class SudokuSolver:
                 
                 # How many blocks meet the criteria
                 TotalSlots = 0
+                Storage = defaultdict(lambda: None)
                 for x in range(x_t*3,x_t*3+3):
                     for y in range(y_t*3,y_t*3+3):
                         if self.possible[x*10+y] is not None:
                             if digit in self.possible[x*10+y]["pool"]:
+                                Storage[TotalSlots] = (x,y)
                                 TotalSlots+=1
-                                pos = x*10+y
-                                X = x
-                                Y = y
                 
                 # If only one blocks meet the criteria, this is the solution
                 if TotalSlots == 1:
                     
                     # Update Solution
+                    pos = Storage[0][0]*10+Storage[0][1]
                     self.matrix[self.possible[pos]["index"]] = digit
                     Solution[found] = dict({"pos":pos,"digit":digit})
                     
@@ -163,18 +178,40 @@ class SudokuSolver:
                     self.possible[pos]["pool"].clear()
                     self.possible[pos]["pool"].add(digit)
                     self.exist_group[group].add(digit)
-                    self.exist_y[Y].add(digit)
-                    self.exist_x[X].add(digit)
+                    self.exist_y[Storage[0][1]].add(digit)
+                    self.exist_x[Storage[0][0]].add(digit)
                     
                     # Elimination is Costly, only run when nothing is found by BruteFource
                     found += 1
+                    
+                # Possibility Induction
+                elif TotalSlots > 1:
+                    reserve = np.zeros((2,TotalSlots),dtype=np.int8)                    
+                    for index in range(TotalSlots):
+                        reserve[:,index] = Storage[index]
+                    if np.all(reserve[0,:]==reserve[0,0]):
+                        # X Matches
+                        for y in range(9):
+                            if y not in range(y_t*3,y_t*3+3) and self.possible[reserve[0,0]*10+y] is not None:
+                                if digit in self.possible[reserve[0,0]*10+y]["pool"]:
+                                    self.possible[reserve[0,0]*10+y]["pool"].remove(digit)
+                    if np.all(reserve[1,:]==reserve[1,0]):
+                        # Y Matches
+                        for x in range(9):
+                            if x not in range(x_t*3,x_t*3+3) and self.possible[x*10+reserve[1,0]] is not None:
+                                if digit in self.possible[x*10+reserve[1,0]]["pool"]:
+                                    self.possible[x*10+reserve[1,0]]["pool"].remove(digit)
+                        
+                    
         return found, Solution
+        
 
 if __name__ == "__main__":
     start = time.time()*1000
     
     solver = SudokuSolver(matrix)
     cycles = 0
+    Fail = 0
     while solver.toSolve > 0:
         ForceFound,Solution = solver.BruteForceSearch()
         EliminationFound,Solution = solver.EliminationSearch()
@@ -184,6 +221,7 @@ if __name__ == "__main__":
         
         #TODO:
         if ForceFound == 0 and EliminationFound == 0 and solver.toSolve > 0:
+            #Fail += 1
             """
             targetLength = len(solver.exist_group[0])
             targetGroup = 0
@@ -209,6 +247,7 @@ if __name__ == "__main__":
             ForceFound,Solution = backupSolver.BruteForceSearch()
             EliminationFound,Solution = backupSolver.EliminationSearch()
             """
+            #if Fail > 2:                
             print "Unable to Complete Puzzle"        
             break
         
