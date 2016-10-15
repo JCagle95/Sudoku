@@ -10,11 +10,11 @@ University of Florida
 """
 
 import os
+import sys; sys.path.append('.\\SDL2\\PySDL2')
 if sys.maxsize > 2**32:
     os.environ['PYSDL2_DLL_PATH'] = '.\\SDL2'
 else:
     os.environ['PYSDL2_DLL_PATH'] = '.\\SDL2\\x86'
-import sys
 import ctypes
 import sdl2
 import numpy as np
@@ -23,6 +23,8 @@ import sdl2.ext
 from collections import defaultdict
 from sets import Set
 import time
+
+from SudokuMath import SudokuSolver
 
 RESOURCES = sdl2.ext.Resources(".", "resources")
 
@@ -180,90 +182,36 @@ class SudokuGUI():
             self.ResetProgram()
     
     def SolveIt(self):
-        print "Clicked"
         start = time.time()*1000
-        
-        possible = defaultdict(lambda: None)
-        exist_x = defaultdict(lambda: None)
-        exist_y = defaultdict(lambda: None)
-        exist_group = defaultdict(lambda: None)
-        target_digit = defaultdict(lambda: None)
-        
-        toSolve = 0
-        for x in range(9):
-            exist_x[x] = Set(self.Sudoku.matrix[x,self.Sudoku.matrix[x,:]!=0])
-            toSolve += sum(self.Sudoku.matrix[x,:]==0)
+        solver = SudokuSolver(self.Sudoku.matrix)
+        cycles = 0
+        while solver.toSolve > 0:
+            ForceFound,Solution = solver.BruteForceSearch()
+            for i in range(ForceFound):
+                self.Sudoku.chosen = Solution[i]["pos"]
+                surface = sdl2.sdlttf.TTF_RenderText_Solid(self.font,str(Solution[i]["digit"]),RED)
+                self.Sudoku.updateDigits(self.factory.from_surface(surface.contents, True),self.Sudoku.chosen, True, self.digit)
+                self.RenderBlocks()
+                
+            EliminationFound,Solution = solver.EliminationSearch()
+            for i in range(EliminationFound):
+                self.Sudoku.chosen = Solution[i]["pos"]
+                surface = sdl2.sdlttf.TTF_RenderText_Solid(self.font,str(Solution[i]["digit"]),RED)
+                self.Sudoku.updateDigits(self.factory.from_surface(surface.contents, True),self.Sudoku.chosen, True, self.digit)
+                self.RenderBlocks()
+                
+            solver.toSolve -= (ForceFound+EliminationFound)
+            cycles += 1
+            if ForceFound == 0 and EliminationFound == 0 and solver.toSolve > 0:
+                print "Unable to Complete Puzzle"        
+                break
             
-        for y in range(9):
-            exist_y[y] = Set(self.Sudoku.matrix[self.Sudoku.matrix[:,y]!=0,y])
-            
-        for group in range(9):
-            x = int(np.floor(group/3))
-            y = group - x*3
-            data = np.reshape(self.Sudoku.matrix[x*3:x*3+3,y*3:y*3+3],(1,9))
-            exist_group[group] = Set(data[data!=0])
-        
-        found = 0
-        RunCount = 0
-        while found < toSolve and RunCount < 20:
-            RunCount += 1
-            Run = True
-            while Run:
-                Run = False
-                for x in range(9):
-                    for y in range(9):
-                        pos = x*10+y
-                        group = np.floor(x/3)*3+np.floor(y/3)
-                        if self.Sudoku.matrix[x,y] == 0:
-                            possible[pos] = dict({"pool":Set(range(1,10)),"index":(x,y)})
-                            possible[pos]["pool"].difference_update(exist_y[y])
-                            possible[pos]["pool"].difference_update(exist_x[x])
-                            possible[pos]["pool"].difference_update(exist_group[group])
-                            if len(possible[pos]["pool"]) == 1:
-                                self.Sudoku.chosen = x*10+y
-                                digit = list(possible[pos]["pool"])[0]
-                                self.Sudoku.matrix[possible[pos]["index"]] = digit
-                                exist_group[group].add(digit)
-                                exist_y[y].add(digit)
-                                exist_x[x].add(digit)
-                                surface = sdl2.sdlttf.TTF_RenderText_Solid(self.font,str(digit),RED)
-                                self.Sudoku.updateDigits(self.factory.from_surface(surface.contents, True), self.Sudoku.chosen, False, 0)
-                                self.RenderBlocks()
-                                Run = True
-                                found += 1
-                                
-            for group in range(9):
-                target_digit[group] = Set(range(1,10))
-                target_digit[group].difference_update(exist_group[group])
-                for digit in target_digit[group]:
-                    x_t = int(np.floor(group/3))
-                    y_t = group - x_t*3
-                    TotalSlots = 0
-                    for x in range(x_t*3,x_t*3+3):
-                        for y in range(y_t*3,y_t*3+3):
-                            if possible[x*10+y] is not None:
-                                if digit in possible[x*10+y]["pool"]:
-                                    TotalSlots+=1
-                                    pos = x*10+y
-                                    X = x
-                                    Y = y
-                                    
-                    if TotalSlots == 1:
-                        self.Sudoku.matrix[possible[pos]["index"]] = digit
-                        possible[pos]["pool"].clear()
-                        possible[pos]["pool"].add(digit)
-                        exist_group[group].add(digit)
-                        exist_y[Y].add(digit)
-                        exist_x[X].add(digit)
-                        self.Sudoku.chosen = pos
-                        surface = sdl2.sdlttf.TTF_RenderText_Solid(self.font,str(digit),RED)
-                        self.Sudoku.updateDigits(self.factory.from_surface(surface.contents, True), self.Sudoku.chosen, False, 0)
-                        self.RenderBlocks()
-                        found += 1
+        if solver.toSolve == 0:
+            print "Found All"
         
         end = time.time()*1000
         print "Time Consumed: " + str(end-start) + " milliseconds"
-        print "Calculation Cycles: " + str(RunCount) + " times"
+        print "Calculation Cycles: " + str(cycles) + " times"
             
     def ResetProgram(self):
         self.Sudoku.reset()
